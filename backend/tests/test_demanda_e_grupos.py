@@ -1,10 +1,11 @@
 import asyncio
+import logging
 import os
 from collections import Counter
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy import insert, select
+from sqlalchemy import exc, insert, select
 
 from app import demanda
 from app.antifraude import gerar_token_formulario
@@ -165,6 +166,23 @@ async def test_consultas_repetidas_do_mesmo_visitante_contam_uma_vez(
     for _ in range(3):
         await obter_horarios(cliente, servico_id, terca)
     assert len(await demandas(motor)) == 1
+
+
+async def test_falha_ao_registrar_demanda_nao_derruba_a_consulta_e_fica_no_log(
+    cliente, servico_id, proxima_segunda, motor, monkeypatch, caplog
+):
+    def falhar(_tabela):
+        raise exc.OperationalError("INSERT", {}, Exception("disco cheio"))
+
+    monkeypatch.setattr(demanda, "insert_sqlite", falhar)
+    monkeypatch.setattr(demanda, "insert_postgres", falhar)
+    terca = proxima_segunda + timedelta(days=1)
+
+    with caplog.at_level(logging.WARNING, logger="doorway"):
+        assert await obter_horarios(cliente, servico_id, terca) == []
+
+    assert await demandas(motor) == []
+    assert "disco cheio" in caplog.text
 
 
 async def test_dia_lotado_registra_motivo_lotado(cliente, servico_id, proxima_segunda, motor):

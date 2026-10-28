@@ -127,8 +127,10 @@ async def registrar(
         if random.random() < 0.01:
             limite = datetime.now(UTC) - timedelta(days=RETENCAO_DIAS)
             await sessao.execute(delete(DemandaPerdida).where(DemandaPerdida.criado_em < limite))
-    except exc.SQLAlchemyError:
-        log.warning("não foi possível registrar a demanda perdida do negócio %s", negocio_id)
+    except exc.SQLAlchemyError as erro:
+        log.warning(
+            "não foi possível registrar a demanda perdida do negócio %s: %r", negocio_id, erro
+        )
 
 
 @dataclass(frozen=True, slots=True)
