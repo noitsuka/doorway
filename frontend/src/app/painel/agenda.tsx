@@ -31,42 +31,17 @@ const ATUALIZAR_MS = 12_000;
 const DIAS_ANTES = 30;
 const DIAS_NA_FAIXA = 120;
 
-export function PaginaDaAgenda() {
-  const { negocio, nome } = useSessao();
-  const fuso = negocio.fuso_horario;
-  const hoje = hojeEm(fuso);
-  const [selecionado, setSelecionado] = useState(hoje);
-  const [semana, setSemana] = useState<{ segunda: string; itens: Agendamento[] }>();
-  const [porDia, setPorDia] = useState<Record<string, number>>();
-  const [horarios, setHorarios] = useState<Horario[]>([]);
-  const [aberto, setAberto] = useState<Agendamento>();
-
-  const segunda = segundaDe(selecionado);
-  const primeiroDia = somarDias(hoje, -DIAS_ANTES);
-  const dias = useMemo(
-    () => Array.from({ length: DIAS_NA_FAIXA }, (_, i) => somarDias(primeiroDia, i)),
-    [primeiroDia],
+function mesmoCliente(a: Agendamento, b: Agendamento) {
+  return Boolean(
+    (b.email_cliente && a.email_cliente === b.email_cliente) ||
+    (b.telefone_cliente && a.telefone_cliente === b.telefone_cliente),
   );
-  const agendamentos = semana?.segunda === segunda ? semana.itens : undefined;
-  const diasAbertos = new Set(horarios.map((h) => h.dia_semana));
+}
 
-  useEffect(() => {
-    let ativo = true;
-    api<AgendaDoDia[]>(`/agendamentos/por-dia?de=${primeiroDia}&quantidade=${DIAS_NA_FAIXA}`)
-      .then(
-        (dados) => ativo && setPorDia(Object.fromEntries(dados.map((d) => [d.data, d.quantidade]))),
-      )
-      .catch(() => {});
-    return () => {
-      ativo = false;
-    };
-  }, [primeiroDia, semana]);
-
-  useEffect(() => {
-    api<Horario[]>("/horarios")
-      .then(setHorarios)
-      .catch(() => setHorarios([]));
-  }, []);
+// Carrega os agendamentos da semana, recarrega a cada ATUALIZAR_MS com a aba visível
+// e avisa quando aparece um agendamento novo.
+function useSemana(segunda: string, fuso: string) {
+  const [semana, setSemana] = useState<{ segunda: string; itens: Agendamento[] }>();
 
   useEffect(() => {
     let ativo = true;
@@ -107,42 +82,83 @@ export function PaginaDaAgenda() {
     };
   }, [segunda, fuso]);
 
-  const cancelar = useCallback(async (agendamento: Agendamento) => {
-    await api(`/agendamentos/${agendamento.id}/cancelar`, { method: "POST" });
-    setSemana(
-      (atual) => atual && { ...atual, itens: atual.itens.filter((a) => a.id !== agendamento.id) },
-    );
-    setAberto(undefined);
-    notificar("Horário cancelado e liberado na sua página.");
+  return [semana, setSemana] as const;
+}
+
+export function PaginaDaAgenda() {
+  const { negocio, nome } = useSessao();
+  const fuso = negocio.fuso_horario;
+  const hoje = hojeEm(fuso);
+  const [selecionado, setSelecionado] = useState(hoje);
+  const segunda = segundaDe(selecionado);
+  const [semana, setSemana] = useSemana(segunda, fuso);
+  const [porDia, setPorDia] = useState<Record<string, number>>();
+  const [horarios, setHorarios] = useState<Horario[]>([]);
+  const [aberto, setAberto] = useState<Agendamento>();
+
+  const primeiroDia = somarDias(hoje, -DIAS_ANTES);
+  const dias = useMemo(
+    () => Array.from({ length: DIAS_NA_FAIXA }, (_, i) => somarDias(primeiroDia, i)),
+    [primeiroDia],
+  );
+  const agendamentos = semana?.segunda === segunda ? semana.itens : undefined;
+  const diasAbertos = new Set(horarios.map((h) => h.dia_semana));
+
+  useEffect(() => {
+    let ativo = true;
+    api<AgendaDoDia[]>(`/agendamentos/por-dia?de=${primeiroDia}&quantidade=${DIAS_NA_FAIXA}`)
+      .then(
+        (dados) => ativo && setPorDia(Object.fromEntries(dados.map((d) => [d.data, d.quantidade]))),
+      )
+      .catch(() => {});
+    return () => {
+      ativo = false;
+    };
+  }, [primeiroDia, semana]);
+
+  useEffect(() => {
+    api<Horario[]>("/horarios")
+      .then(setHorarios)
+      .catch(() => setHorarios([]));
   }, []);
 
-  const bloquear = useCallback(async (agendamento: Agendamento) => {
-    const { cancelados } = await api<{ cancelados: number }>("/bloqueios", {
-      method: "POST",
-      json: { agendamento_id: agendamento.id },
-    });
-    const agora = Date.now();
-    setSemana(
-      (atual) =>
-        atual && {
-          ...atual,
-          itens: atual.itens.filter(
-            (a) =>
-              !(
-                (agendamento.email_cliente && a.email_cliente === agendamento.email_cliente) ||
-                (agendamento.telefone_cliente &&
-                  a.telefone_cliente === agendamento.telefone_cliente)
-              ) || new Date(a.inicio).getTime() <= agora,
-          ),
-        },
-    );
-    setAberto(undefined);
-    notificar(
-      cancelados
-        ? `Cliente bloqueado. ${cancelados} ${cancelados === 1 ? "agendamento futuro cancelado" : "agendamentos futuros cancelados"}.`
-        : "Cliente bloqueado.",
-    );
-  }, []);
+  const cancelar = useCallback(
+    async (agendamento: Agendamento) => {
+      await api(`/agendamentos/${agendamento.id}/cancelar`, { method: "POST" });
+      setSemana(
+        (atual) => atual && { ...atual, itens: atual.itens.filter((a) => a.id !== agendamento.id) },
+      );
+      setAberto(undefined);
+      notificar("Horário cancelado e liberado na sua página.");
+    },
+    [setSemana],
+  );
+
+  const bloquear = useCallback(
+    async (agendamento: Agendamento) => {
+      const { cancelados } = await api<{ cancelados: number }>("/bloqueios", {
+        method: "POST",
+        json: { agendamento_id: agendamento.id },
+      });
+      const agora = Date.now();
+      setSemana(
+        (atual) =>
+          atual && {
+            ...atual,
+            itens: atual.itens.filter(
+              (a) => !mesmoCliente(a, agendamento) || new Date(a.inicio).getTime() <= agora,
+            ),
+          },
+      );
+      setAberto(undefined);
+      notificar(
+        cancelados
+          ? `Cliente bloqueado. ${cancelados} ${cancelados === 1 ? "agendamento futuro cancelado" : "agendamentos futuros cancelados"}.`
+          : "Cliente bloqueado.",
+      );
+    },
+    [setSemana],
+  );
 
   const doDia = (dia: string) =>
     agendamentos?.filter((a) => diaLocal(a.inicio, fuso) === dia) ?? [];
