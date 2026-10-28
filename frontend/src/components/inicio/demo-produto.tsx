@@ -122,6 +122,29 @@ export function DemoProduto() {
   );
 }
 
+function Indicadores({
+  itens,
+  className,
+  truncar = false,
+}: {
+  itens: [rotulo: string, valor: string][];
+  className: string;
+  truncar?: boolean;
+}) {
+  return (
+    <div
+      className={`grid grid-cols-3 overflow-hidden rounded-[8px] border border-line text-xs ${className}`}
+    >
+      {itens.map(([rotulo, valor], i) => (
+        <div key={rotulo} className={`p-3 ${i < itens.length - 1 ? "border-r border-line" : ""}`}>
+          <p className={truncar ? "truncate text-muted" : "text-muted"}>{rotulo}</p>
+          <p className="mt-1 font-mono text-base font-medium">{valor}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const dia = [
   { inicio: 9, duracao: 1, nome: "Rafael Souza", servico: "Corte + barba" },
   { inicio: 10.25, duracao: 0.5, nome: "Bruno Lima", servico: "Corte masculino" },
@@ -172,18 +195,14 @@ function TelaAgenda() {
         <p className="text-xl font-medium tracking-tight">
           <span className={ola ? undefined : "invisible"}>{ola ?? "Bom dia"}</span>, Thiago.
         </p>
-        <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-[8px] border border-line text-xs">
-          {[
+        <Indicadores
+          className="mt-4"
+          itens={[
             ["Hoje", "5"],
             ["Na semana", "31"],
             ["Receita prevista", "R$ 2.315"],
-          ].map(([rotulo, valor], i) => (
-            <div key={rotulo} className={`p-3 ${i < 2 ? "border-r border-line" : ""}`}>
-              <p className="text-muted">{rotulo}</p>
-              <p className="mt-1 font-mono text-base font-medium">{valor}</p>
-            </div>
-          ))}
-        </div>
+          ]}
+        />
         <div className="mt-4 flex items-center justify-between text-xs">
           <span className="text-muted">Sexta-feira, 24 de outubro</span>
           <span className="inline-flex items-center gap-1 rounded-[6px] border border-line px-2 py-1 text-muted">
@@ -405,18 +424,15 @@ function TelaDemanda() {
   return (
     <div className="mx-auto h-full max-w-lg p-5 sm:p-8">
       <p className="text-sm font-medium">Demanda perdida · últimos 30 dias</p>
-      <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-[8px] border border-line text-xs">
-        {[
+      <Indicadores
+        className="mt-3"
+        truncar
+        itens={[
           ["Pedidos sem horário", "61"],
           ["Fora do expediente", "43"],
           ["Agenda cheia", "18"],
-        ].map(([rotulo, valor], i) => (
-          <div key={rotulo} className={`p-3 ${i < 2 ? "border-r border-line" : ""}`}>
-            <p className="truncate text-muted">{rotulo}</p>
-            <p className="mt-1 font-mono text-base font-medium">{valor}</p>
-          </div>
-        ))}
-      </div>
+        ]}
+      />
       <div className="mt-4 grid grid-cols-[1.75rem_repeat(10,1fr)] gap-1">
         {demanda.map((linha, dia) => (
           <div key={dia} className="contents">
