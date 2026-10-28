@@ -6,7 +6,9 @@ import { Moon, Sun } from "lucide-react";
 const CHAVE = "doorway.tema";
 type Tema = "claro" | "escuro";
 
-export const scriptDoTema = `(function(){try{var t=localStorage.getItem("${CHAVE}");if(t!=="claro"&&t!=="escuro"){t="escuro"}document.documentElement.dataset.tema=t}catch(e){}})()`;
+// Roda antes da hidratação para evitar o flash de tema errado. Sem acesso ao
+// localStorage (aba anônima, cookies bloqueados) cai no tema escuro, o mesmo do servidor.
+export const scriptDoTema = `(function(){var t;try{t=localStorage.getItem("${CHAVE}")}catch(e){t=null}document.documentElement.dataset.tema=t==="claro"?"claro":"escuro"})()`;
 
 const ouvintes = new Set<() => void>();
 
@@ -25,7 +27,9 @@ function aplicar(tema: Tema) {
   raiz.dataset.tema = tema;
   try {
     localStorage.setItem(CHAVE, tema);
-  } catch {}
+  } catch {
+    // Sem armazenamento disponível o tema vale só até recarregar a página.
+  }
   ouvintes.forEach((ouvinte) => ouvinte());
   requestAnimationFrame(() => requestAnimationFrame(() => delete raiz.dataset.trocandoTema));
 }
