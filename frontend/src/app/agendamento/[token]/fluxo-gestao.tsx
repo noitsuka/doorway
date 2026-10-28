@@ -71,7 +71,6 @@ function Fluxo({ token }: { token: string }) {
   if (agendamento === null) return <NaoEncontrado />;
 
   const { negocio } = agendamento;
-  const fuso = negocio.fuso_horario;
   const cancelado = agendamento.status === "cancelado";
   const passou = new Date(agendamento.inicio) <= new Date();
   const travado = cancelado || passou;
@@ -115,34 +114,7 @@ function Fluxo({ token }: { token: string }) {
           {cancelado ? "Agendamento cancelado" : agendamento.servico.nome}
         </h1>
 
-        <div
-          className={`mt-8 rounded-panel border border-line bg-raised p-6 shadow-2 ${cancelado ? "opacity-60" : ""}`}
-        >
-          <dl className="grid gap-5 sm:grid-cols-3">
-            <div className="sm:col-span-3">
-              <dt className="text-xs text-faint">Data</dt>
-              <dd
-                className={`mt-1 text-lg font-medium first-letter:uppercase ${cancelado ? "line-through" : ""}`}
-              >
-                {dataLonga(agendamento.inicio, fuso)}
-              </dd>
-            </div>
-            {[
-              ["Início", hora(agendamento.inicio, fuso)],
-              ["Fim", hora(agendamento.fim, fuso)],
-              ["Valor", preco(agendamento.servico.preco_centavos)],
-            ].map(([rotulo, valor]) => (
-              <div key={rotulo}>
-                <dt className="text-xs text-faint">{rotulo}</dt>
-                <dd className="mt-1 font-mono text-xl font-semibold tabular">{valor}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="mt-6 border-t border-line pt-4 text-sm text-muted">
-            Cliente: <span className="font-medium text-fg">{agendamento.nome_cliente}</span>
-            {agendamento.telefone_cliente && ` · ${exibirTelefone(agendamento.telefone_cliente)}`}
-          </p>
-        </div>
+        <ResumoDoAgendamento agendamento={agendamento} cancelado={cancelado} />
 
         {erro && (
           <div className="mt-5">
@@ -163,89 +135,194 @@ function Fluxo({ token }: { token: string }) {
             )}
           </div>
         ) : modo === "ver" ? (
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            <Botao variante="destaque" className="h-12" onClick={() => setModo("remarcar")}>
-              <Repeat className="size-4" /> Remarcar
-            </Botao>
-            <Botao variante="perigo" className="h-12" onClick={() => setModo("cancelar")}>
-              <CalendarX2 className="size-4" /> Cancelar
-            </Botao>
-            <a
-              href={urlGoogleAgenda(agendamento, negocio.nome)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-line-strong px-4 text-sm font-medium whitespace-nowrap transition-colors hover:border-fg/30 hover:bg-surface"
-            >
-              <CalendarPlus className="size-4" /> Google Agenda
-            </a>
-            <a
-              href={urlOutlook(agendamento, negocio.nome)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-control border border-line-strong px-4 text-sm font-medium whitespace-nowrap transition-colors hover:border-fg/30 hover:bg-surface"
-            >
-              <CalendarPlus className="size-4" /> Outlook
-            </a>
-          </div>
+          <AcoesDoAgendamento agendamento={agendamento} aoEscolher={setModo} />
         ) : modo === "cancelar" ? (
-          <div className="mt-8 rounded-panel bg-danger-soft p-5">
-            <p className="font-semibold text-danger">Cancelar o agendamento?</p>
-            <p className="mt-1 text-sm text-muted">O horário será liberado para outros clientes.</p>
-            <div className="mt-4 flex gap-2">
-              <Botao
-                className="bg-danger! text-white!"
-                carregando={ocupado}
-                onClick={() => executar("cancelar")}
-              >
-                Sim, cancelar
-              </Botao>
-              <Botao variante="fantasma" onClick={() => setModo("ver")}>
-                Voltar
-              </Botao>
-            </div>
-          </div>
+          <ConfirmarCancelamento
+            ocupado={ocupado}
+            aoConfirmar={() => executar("cancelar")}
+            aoVoltar={() => setModo("ver")}
+          />
         ) : (
-          <section className="mt-10">
-            <h2 className="text-xl font-semibold tracking-tight">Escolha o novo horário</h2>
-            {dia && (
-              <>
-                <FaixaDeDias
-                  slug={negocio.slug}
-                  servicoIds={[agendamento.servico.id]}
-                  fuso={fuso}
-                  valor={dia}
-                  aoMudar={(d) => {
-                    setDia(d);
-                    setHorario(undefined);
-                  }}
-                />
-                <GradeDeHorarios
-                  slug={negocio.slug}
-                  servicoIds={[agendamento.servico.id]}
-                  dia={dia}
-                  fuso={fuso}
-                  valor={horario}
-                  aoMudar={setHorario}
-                />
-              </>
-            )}
-            <div className="mt-8 flex gap-2">
-              <Botao
-                variante="destaque"
-                tamanho="grande"
-                disabled={!horario}
-                carregando={ocupado}
-                onClick={() => executar("remarcar", { inicio: horario })}
-              >
-                Confirmar {horario ? hora(horario, fuso) : "novo horário"}
-              </Botao>
-              <Botao variante="fantasma" tamanho="grande" onClick={() => setModo("ver")}>
-                Voltar
-              </Botao>
-            </div>
-          </section>
+          <EscolherNovoHorario
+            agendamento={agendamento}
+            dia={dia}
+            horario={horario}
+            ocupado={ocupado}
+            aoMudarDia={(d) => {
+              setDia(d);
+              setHorario(undefined);
+            }}
+            aoMudarHorario={setHorario}
+            aoConfirmar={() => executar("remarcar", { inicio: horario })}
+            aoVoltar={() => setModo("ver")}
+          />
         )}
       </main>
     </div>
+  );
+}
+
+function ResumoDoAgendamento({
+  agendamento,
+  cancelado,
+}: {
+  agendamento: AgendamentoGerenciado;
+  cancelado: boolean;
+}) {
+  const fuso = agendamento.negocio.fuso_horario;
+  return (
+    <div
+      className={`mt-8 rounded-panel border border-line bg-raised p-6 shadow-2 ${cancelado ? "opacity-60" : ""}`}
+    >
+      <dl className="grid gap-5 sm:grid-cols-3">
+        <div className="sm:col-span-3">
+          <dt className="text-xs text-faint">Data</dt>
+          <dd
+            className={`mt-1 text-lg font-medium first-letter:uppercase ${cancelado ? "line-through" : ""}`}
+          >
+            {dataLonga(agendamento.inicio, fuso)}
+          </dd>
+        </div>
+        {[
+          ["Início", hora(agendamento.inicio, fuso)],
+          ["Fim", hora(agendamento.fim, fuso)],
+          ["Valor", preco(agendamento.servico.preco_centavos)],
+        ].map(([rotulo, valor]) => (
+          <div key={rotulo}>
+            <dt className="text-xs text-faint">{rotulo}</dt>
+            <dd className="mt-1 font-mono text-xl font-semibold tabular">{valor}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-6 border-t border-line pt-4 text-sm text-muted">
+        Cliente: <span className="font-medium text-fg">{agendamento.nome_cliente}</span>
+        {agendamento.telefone_cliente && ` · ${exibirTelefone(agendamento.telefone_cliente)}`}
+      </p>
+    </div>
+  );
+}
+
+const LINK_DE_AGENDA =
+  "inline-flex h-12 items-center justify-center gap-2 rounded-control border border-line-strong px-4 text-sm font-medium whitespace-nowrap transition-colors hover:border-fg/30 hover:bg-surface";
+
+function AcoesDoAgendamento({
+  agendamento,
+  aoEscolher,
+}: {
+  agendamento: AgendamentoGerenciado;
+  aoEscolher: (modo: Modo) => void;
+}) {
+  const nome = agendamento.negocio.nome;
+  return (
+    <div className="mt-8 grid grid-cols-2 gap-3">
+      <Botao variante="destaque" className="h-12" onClick={() => aoEscolher("remarcar")}>
+        <Repeat className="size-4" /> Remarcar
+      </Botao>
+      <Botao variante="perigo" className="h-12" onClick={() => aoEscolher("cancelar")}>
+        <CalendarX2 className="size-4" /> Cancelar
+      </Botao>
+      <a
+        href={urlGoogleAgenda(agendamento, nome)}
+        target="_blank"
+        rel="noreferrer"
+        className={LINK_DE_AGENDA}
+      >
+        <CalendarPlus className="size-4" /> Google Agenda
+      </a>
+      <a
+        href={urlOutlook(agendamento, nome)}
+        target="_blank"
+        rel="noreferrer"
+        className={LINK_DE_AGENDA}
+      >
+        <CalendarPlus className="size-4" /> Outlook
+      </a>
+    </div>
+  );
+}
+
+function ConfirmarCancelamento({
+  ocupado,
+  aoConfirmar,
+  aoVoltar,
+}: {
+  ocupado: boolean;
+  aoConfirmar: () => void;
+  aoVoltar: () => void;
+}) {
+  return (
+    <div className="mt-8 rounded-panel bg-danger-soft p-5">
+      <p className="font-semibold text-danger">Cancelar o agendamento?</p>
+      <p className="mt-1 text-sm text-muted">O horário será liberado para outros clientes.</p>
+      <div className="mt-4 flex gap-2">
+        <Botao className="bg-danger! text-white!" carregando={ocupado} onClick={aoConfirmar}>
+          Sim, cancelar
+        </Botao>
+        <Botao variante="fantasma" onClick={aoVoltar}>
+          Voltar
+        </Botao>
+      </div>
+    </div>
+  );
+}
+
+function EscolherNovoHorario({
+  agendamento,
+  dia,
+  horario,
+  ocupado,
+  aoMudarDia,
+  aoMudarHorario,
+  aoConfirmar,
+  aoVoltar,
+}: {
+  agendamento: AgendamentoGerenciado;
+  dia?: string;
+  horario?: string;
+  ocupado: boolean;
+  aoMudarDia: (dia: string) => void;
+  aoMudarHorario: (horario: string) => void;
+  aoConfirmar: () => void;
+  aoVoltar: () => void;
+}) {
+  const { slug, fuso_horario: fuso } = agendamento.negocio;
+  const servicoIds = [agendamento.servico.id];
+  return (
+    <section className="mt-10">
+      <h2 className="text-xl font-semibold tracking-tight">Escolha o novo horário</h2>
+      {dia && (
+        <>
+          <FaixaDeDias
+            slug={slug}
+            servicoIds={servicoIds}
+            fuso={fuso}
+            valor={dia}
+            aoMudar={aoMudarDia}
+          />
+          <GradeDeHorarios
+            slug={slug}
+            servicoIds={servicoIds}
+            dia={dia}
+            fuso={fuso}
+            valor={horario}
+            aoMudar={aoMudarHorario}
+          />
+        </>
+      )}
+      <div className="mt-8 flex gap-2">
+        <Botao
+          variante="destaque"
+          tamanho="grande"
+          disabled={!horario}
+          carregando={ocupado}
+          onClick={aoConfirmar}
+        >
+          Confirmar {horario ? hora(horario, fuso) : "novo horário"}
+        </Botao>
+        <Botao variante="fantasma" tamanho="grande" onClick={aoVoltar}>
+          Voltar
+        </Botao>
+      </div>
+    </section>
   );
 }
