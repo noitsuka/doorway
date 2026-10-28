@@ -44,6 +44,7 @@ export default function LayoutRaiz({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
+        {/* Constante do próprio código, sem dado do usuário: não há o que sanitizar. */}
         <script dangerouslySetInnerHTML={{ __html: scriptDoTema }} />
       </head>
       <body className="min-h-dvh">
