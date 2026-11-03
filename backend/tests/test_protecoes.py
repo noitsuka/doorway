@@ -48,6 +48,27 @@ async def test_login_tem_limite_por_cliente(cliente, monkeypatch):
     assert int(bloqueado.headers["retry-after"]) > 0
 
 
+async def test_login_tem_limite_por_conta_vindo_de_varios_ips(cliente, monkeypatch):
+    monkeypatch.setattr(limite_requisicoes.time, "time", lambda: T0)
+    monkeypatch.setattr(obter_configuracao(), "limite_requisicoes_ativo", True)
+    monkeypatch.setattr(obter_configuracao(), "confiar_ip_real", True)
+    monkeypatch.setattr(obter_configuracao(), "tentativas_login_por_conta", 2)
+    alvo = {"email": "Alvo@example.com", "senha": "chute-1234"}
+
+    codigos = [
+        (
+            await cliente.post(
+                "/autenticacao/login", json=alvo, headers={"X-Real-IP": f"10.0.0.{i}"}
+            )
+        ).status_code
+        for i in range(4)
+    ]
+    assert codigos == [401, 401, 429, 429]
+
+    outra = await cliente.post("/autenticacao/login", json={**alvo, "email": "outra@example.com"})
+    assert outra.status_code == 401
+
+
 async def test_toda_resposta_tem_id_e_cabecalhos_de_seguranca(cliente):
     resposta = await cliente.get("/saude")
     assert len(resposta.headers["x-request-id"]) == 32

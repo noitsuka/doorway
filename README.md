@@ -144,7 +144,7 @@ Sem a trava, os testes de concorrência mostraram deadlock entre inserções sob
 | Reservas simultâneas para o mesmo horário | uma `201`, as demais `409` |
 | Byte nulo, surrogates ou números fora de faixa na entrada | `422`, sem ecoar o valor enviado |
 | Corpo acima de 64 KB | `413` antes de ler o restante |
-| Força bruta no login, enxurrada de reservas | `429` com `Retry-After` |
+| Força bruta no login, enxurrada de reservas | `429` com `Retry-After`; o login tem limite por IP e por conta |
 | `X-Forwarded-For` forjado | ignorado, a menos que venha do proxy configurado |
 | Upload de SVG ou arquivo renomeado como imagem | `422`, o tipo é detectado pelos bytes |
 | Um mesmo telefone reservando todos os horários | limite de 3 reservas futuras por negócio |
@@ -164,7 +164,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-227 testes: unidade, API, propriedades, fuzzing e um teste de caos com 60 clientes simultâneos que, ao final, confere no banco que nenhuma regra foi violada. Em SQLite, os 11 testes que dependem do PostgreSQL são pulados. Com `DATABASE_URL` apontando para PostgreSQL rodam todos, como na CI, que também executa `alembic check`. No frontend, a CI confere tipos, ESLint, Prettier e o build.
+228 testes: unidade, API, propriedades, fuzzing e um teste de caos com 60 clientes simultâneos que, ao final, confere no banco que nenhuma regra foi violada. Em SQLite, os 11 testes que dependem do PostgreSQL são pulados. Com `DATABASE_URL` apontando para PostgreSQL rodam todos, como na CI, que também executa `alembic check`. No frontend, a CI confere tipos, ESLint, Prettier e o build.
 
 O desempenho pode ser medido com `backend/scripts/teste_carga.py`. Numa máquina local, com 4 workers e 50 conexões, a consulta de horários sustentou cerca de 1.600 req/s com p99 de 42 ms. A demonstração roda em funções serverless, então a latência lá é dominada pela rede.
 
@@ -194,6 +194,7 @@ Frontend e API são dois projetos na Vercel, com as funções em São Paulo (`gr
 | `CRON_SECRET` | API | protege o reset diário da demo |
 | `MIN_FORM_SECONDS` | API | opcional, tempo mínimo de preenchimento da reserva (padrão 3) |
 | `MAX_UPCOMING_BOOKINGS_PER_IP` | API | opcional, reservas futuras por conexão em cada negócio (padrão 6) |
+| `LOGIN_ATTEMPTS_PER_ACCOUNT` | API | opcional, tentativas de login por conta a cada 15 minutos (padrão 20) |
 | `NEXT_PUBLIC_API_URL` | Frontend | URL pública da API |
 
 Migrações: `alembic upgrade head` com `DATABASE_URL` apontando para o banco de produção.

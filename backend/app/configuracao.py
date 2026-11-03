@@ -50,6 +50,7 @@ class Configuracao(BaseSettings):
 
     limite_requisicoes_ativo: bool = _env("RATE_LIMIT_ENABLED", True)
     tentativas_login_por_minuto: int = _env("LOGIN_ATTEMPTS_PER_MINUTE", 10)
+    tentativas_login_por_conta: int = _env("LOGIN_ATTEMPTS_PER_ACCOUNT", 20)
     cadastros_por_hora: int = _env("SIGNUPS_PER_HOUR", 10)
     reservas_por_minuto: int = _env("BOOKINGS_PER_MINUTE", 20)
     corridas_por_minuto: int = _env("RACE_TESTS_PER_MINUTE", 6)

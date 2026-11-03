@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from app.configuracao import obter_configuracao
 from app.dependencias import Sessao, UsuarioAtual
 from app.esquemas import CadastroEntrada, LoginEntrada, TokenSaida, UsuarioSaida
-from app.limite_requisicoes import limite_cadastro, limite_login
+from app.limite_requisicoes import conferir_limite, limite_cadastro, limite_login
 from app.modelos import Negocio, Usuario
 from app.seguranca import criar_token_acesso, gerar_hash_senha, verificar_senha
 
@@ -39,7 +39,10 @@ async def cadastrar(dados: CadastroEntrada, sessao: Sessao):
 
 @rotas.post("/login", response_model=TokenSaida, dependencies=[Depends(limite_login)])
 async def entrar(dados: LoginEntrada, sessao: Sessao):
-    usuario = await sessao.scalar(select(Usuario).where(Usuario.email == dados.email.lower()))
+    email = dados.email.lower()
+    configuracao = obter_configuracao()
+    await conferir_limite(f"login-conta:{email}", configuracao.tentativas_login_por_conta, 900)
+    usuario = await sessao.scalar(select(Usuario).where(Usuario.email == email))
     if not await verificar_senha(dados.senha, usuario.hash_senha if usuario else None):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "E-mail ou senha incorretos.")
     return TokenSaida(token_acesso=criar_token_acesso(usuario.id))

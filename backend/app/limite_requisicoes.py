@@ -42,18 +42,21 @@ def ip_do_cliente(requisicao: Request) -> str:
     return requisicao.client.host if requisicao.client else "desconhecido"
 
 
+async def conferir_limite(chave: str, limite: int, janela_segundos: int) -> None:
+    if not obter_configuracao().limite_requisicoes_ativo:
+        return
+    acessos, espera = await contar_acesso(chave, janela_segundos)
+    if acessos > limite:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Muitas tentativas seguidas. Tente de novo em instantes.",
+            headers={"Retry-After": str(max(1, math.ceil(espera)))},
+        )
+
+
 def limite_requisicoes(nome: str, limite: Callable[[], int], janela_segundos: int):
     async def dependencia(requisicao: Request) -> None:
-        if not obter_configuracao().limite_requisicoes_ativo:
-            return
-        cliente = ip_do_cliente(requisicao)
-        acessos, espera = await contar_acesso(f"{nome}:{cliente}", janela_segundos)
-        if acessos > limite():
-            raise HTTPException(
-                status.HTTP_429_TOO_MANY_REQUESTS,
-                "Muitas tentativas seguidas. Tente de novo em instantes.",
-                headers={"Retry-After": str(max(1, math.ceil(espera)))},
-            )
+        await conferir_limite(f"{nome}:{ip_do_cliente(requisicao)}", limite(), janela_segundos)
 
     return dependencia
 
