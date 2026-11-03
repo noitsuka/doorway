@@ -35,6 +35,7 @@ const navegacao = [
 export function MolduraDoPainel({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const caminho = usePathname();
+  const indiceAtivo = navegacao.findIndex(({ href }) => href === caminho);
   const [usuario, setUsuario] = useState<Usuario>();
 
   useEffect(() => {
@@ -69,7 +70,14 @@ export function MolduraDoPainel({ children }: { children: React.ReactNode }) {
         <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
           <aside className="hidden border-r border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:px-4 lg:py-6">
             <Logo className="px-2" />
-            <nav className="mt-10 space-y-1">
+            <nav className="relative mt-10 space-y-1">
+              {indiceAtivo >= 0 && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-11 rounded-control bg-fg transition-transform duration-200 ease-(--ease-out)"
+                  style={{ transform: `translateY(${indiceAtivo * 3}rem)` }}
+                />
+              )}
               {navegacao.map(({ href, rotulo, Icone }) => {
                 const ativo = caminho === href;
                 return (
@@ -77,8 +85,8 @@ export function MolduraDoPainel({ children }: { children: React.ReactNode }) {
                     key={href}
                     href={href}
                     aria-current={ativo ? "page" : undefined}
-                    className={`flex h-11 items-center gap-3 rounded-control px-3 text-[15px] font-medium transition-colors ${
-                      ativo ? "bg-fg text-canvas" : "text-muted hover:bg-fg/[0.05] hover:text-fg"
+                    className={`relative flex h-11 items-center gap-3 rounded-control px-3 text-[15px] font-medium transition-colors duration-200 ${
+                      ativo ? "text-canvas" : "text-muted hover:bg-fg/[0.05] hover:text-fg"
                     }`}
                   >
                     <Icone className="size-[18px]" />
@@ -145,6 +153,15 @@ export function MolduraDoPainel({ children }: { children: React.ReactNode }) {
             aria-label="Navegação"
             className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-canvas/90 px-2 pt-2 pb-safe backdrop-blur-md lg:hidden"
           >
+            {indiceAtivo >= 0 && (
+              <span
+                aria-hidden
+                className="absolute top-3.5 left-2 flex w-[calc((100%-1rem)/5)] justify-center transition-transform duration-200 ease-(--ease-out)"
+                style={{ transform: `translateX(${indiceAtivo * 100}%)` }}
+              >
+                <span className="h-8 w-14 rounded-full bg-fg" />
+              </span>
+            )}
             {navegacao.map(({ href, rotulo, Icone }) => {
               const ativo = caminho === href;
               return (
@@ -152,13 +169,13 @@ export function MolduraDoPainel({ children }: { children: React.ReactNode }) {
                   key={href}
                   href={href}
                   aria-current={ativo ? "page" : undefined}
-                  className={`flex flex-col items-center gap-1 rounded-control py-1.5 text-[11px] font-medium ${
+                  className={`relative flex flex-col items-center gap-1 rounded-control py-1.5 text-[11px] font-medium ${
                     ativo ? "text-fg" : "text-faint"
                   }`}
                 >
                   <span
-                    className={`grid h-8 w-14 place-items-center rounded-full transition-colors ${
-                      ativo ? "bg-fg text-canvas" : ""
+                    className={`grid h-8 w-14 place-items-center rounded-full transition-colors duration-200 ${
+                      ativo ? "text-canvas" : ""
                     }`}
                   >
                     <Icone className="size-[18px]" />
