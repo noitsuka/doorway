@@ -38,7 +38,7 @@ export function SeletorServico({
                     selecionado ? "border-accent bg-accent text-accent-fg" : "border-line-strong"
                   }`}
                 >
-                  {selecionado && <Check className="size-3" strokeWidth={3.5} />}
+                  {selecionado && <Check className="size-3 animate-icon-in" strokeWidth={3.5} />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold break-words">{s.nome}</span>

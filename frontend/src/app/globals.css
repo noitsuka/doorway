@@ -54,6 +54,7 @@
   --animate-celula: celula 0.5s var(--ease-out) both;
   --animate-pop: pop 0.38s var(--ease-out);
   --animate-surgir: surgir 0.4s var(--ease-out) both;
+  --animate-aviso: surgir 0.18s var(--ease-out) both;
   --animate-piscar: piscar 1.06s step-end infinite;
 
   @keyframes enter {

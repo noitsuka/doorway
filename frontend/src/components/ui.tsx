@@ -90,8 +90,9 @@ export function Campo({
       />
       {nota && (
         <p
+          key={erro ? "erro" : "dica"}
           id={`${id}-nota`}
-          className={`mt-1.5 text-[13px] ${erro ? "text-danger" : "text-muted"}`}
+          className={`mt-1.5 text-[13px] ${erro ? "animate-aviso text-danger" : "text-muted"}`}
         >
           {nota}
         </p>

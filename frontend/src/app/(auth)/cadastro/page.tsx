@@ -130,8 +130,9 @@ export default function PaginaDeCadastro() {
             />
           </div>
           <p
+            key={erroSlug ? "erro" : "dica"}
             id={`${idSlug}-nota`}
-            className={`mt-1.5 text-[13px] ${erroSlug ? "text-danger" : "text-muted"}`}
+            className={`mt-1.5 text-[13px] ${erroSlug ? "animate-aviso text-danger" : "text-muted"}`}
           >
             {erroSlug ?? "É o endereço que você vai mandar para os clientes."}
           </p>
