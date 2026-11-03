@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
+
 import { Logo } from "@/components/logo";
 import { AlternarTema } from "@/components/tema";
+
+export const metadata: Metadata = { robots: { index: false } };
 
 const dia = [
   { inicio: 9, duracao: 1, nome: "Rafael", servico: "Corte + barba" },
