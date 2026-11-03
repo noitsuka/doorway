@@ -44,6 +44,9 @@
   --animate-fade: fade 0.3s ease both;
   --animate-sheet-up: sheet-up 0.45s var(--ease-out) both;
   --animate-sheet-left: sheet-left 0.45s var(--ease-out) both;
+  --animate-sheet-out-down: sheet-out-down 0.2s var(--ease-in-out) both;
+  --animate-sheet-out-right: sheet-out-right 0.2s var(--ease-in-out) both;
+  --animate-fade-out: fade 0.2s ease reverse both;
   --animate-trace: trace 9s linear infinite;
   --animate-icon-in: icon-in 0.35s var(--ease-out) both;
   --animate-spinner: spinner 0.85s linear infinite;
@@ -136,6 +139,18 @@
     }
   }
 
+  @keyframes sheet-out-down {
+    to {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+  }
+  @keyframes sheet-out-right {
+    to {
+      opacity: 0;
+      transform: translateX(32px);
+    }
+  }
   @keyframes fade {
     from {
       opacity: 0;
