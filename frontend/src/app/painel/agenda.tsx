@@ -273,7 +273,7 @@ function Indicador({
       {valor === undefined ? (
         <Esqueleto className="mt-2 h-8 w-16" />
       ) : (
-        <p className="mt-1.5 truncate font-mono text-xl font-semibold tracking-tight tabular sm:text-3xl">
+        <p className="mt-1.5 truncate font-mono text-xl font-semibold tracking-tight tabular sm:text-2xl xl:text-3xl">
           <NumeroAnimado valor={valor} formatar={formatar} desdeZero />
         </p>
       )}

@@ -66,7 +66,7 @@ export function MolduraDoPainel({ children }: { children: React.ReactNode }) {
   return (
     <ContextoSessao value={usuario}>
       <ContextoAtualizarSessao value={setUsuario}>
-        <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
+        <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
           <aside className="hidden border-r border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:px-4 lg:py-6">
             <Logo className="px-2" />
             <nav className="mt-10 space-y-1">

@@ -76,7 +76,7 @@ export default function PaginaDeEntrada() {
       </div>
 
       <BotaoDemo variante="contorno" tamanho="grande" className="w-full">
-        Entrar com a conta demo, sem cadastro
+        Testar a demo, sem cadastro
       </BotaoDemo>
 
       <p className="mt-10 text-center text-[15px] text-muted">
