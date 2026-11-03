@@ -8,7 +8,6 @@ import { URL_GITHUB } from "@/lib/demo";
 
 const secoes = [
   { id: "produto", rotulo: "Produto" },
-  { id: "exemplos", rotulo: "Exemplos" },
   { id: "recursos", rotulo: "Recursos" },
 ];
 

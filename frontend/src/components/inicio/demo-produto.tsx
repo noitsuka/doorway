@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { LogoMarca } from "@/components/logo";
-import { EXEMPLOS } from "@/lib/exemplos";
+import { BARBEARIA } from "@/lib/exemplos";
 import { saudacao } from "@/lib/formatacao";
 import { estiloDaMarca } from "@/lib/marca";
 
@@ -284,8 +284,6 @@ function TelaAgenda() {
   );
 }
 
-const barbearia = EXEMPLOS[0];
-
 function TelaReserva() {
   const dias = [
     ["ter", "21", 6],
@@ -296,11 +294,11 @@ function TelaReserva() {
   ] as const;
   const horarios = ["09:00", "09:30", "10:15", "11:00", "14:00", "14:45", "15:30", "16:15"];
   return (
-    <div className="mx-auto h-full max-w-md p-5 sm:p-8" style={estiloDaMarca(barbearia.cor)}>
+    <div className="mx-auto h-full max-w-md p-5 sm:p-8" style={estiloDaMarca(BARBEARIA.cor)}>
       <p className="text-[11px] font-semibold tracking-[0.12em] text-accent uppercase">
-        {barbearia.categoria}
+        {BARBEARIA.categoria}
       </p>
-      <p className="font-medium">{barbearia.nome}</p>
+      <p className="font-medium">{BARBEARIA.nome}</p>
       <div className="mt-4 flex items-center justify-between text-xs">
         <span className="text-muted">Quarta-feira, 22 de outubro</span>
         <span className="inline-flex items-center gap-1 rounded-[6px] border border-line px-2 py-1 text-muted">

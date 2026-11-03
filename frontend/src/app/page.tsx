@@ -2,7 +2,6 @@ import { ArrowRight } from "lucide-react";
 
 import { BotaoDemo } from "@/components/botao-demo";
 import { PaginaInstitucional } from "@/components/inicio/pagina-institucional";
-import { CartoesExemplos } from "@/components/inicio/cartoes-exemplos";
 import { Engenharia } from "@/components/inicio/engenharia";
 import { ComoFunciona } from "@/components/inicio/como-funciona";
 import { DemoProduto } from "@/components/inicio/demo-produto";
@@ -93,15 +92,6 @@ export default function Inicio() {
             <DemoProduto />
           </Surgir>
         </section>
-
-        <Secao
-          id="exemplos"
-          sobretitulo="Exemplos"
-          titulo="Quatro negócios, um sistema."
-          texto="Cada página tem cor, serviços e agenda próprios. Abra qualquer uma e marque um horário de verdade."
-        >
-          <CartoesExemplos />
-        </Secao>
 
         <Secao
           id="recursos"

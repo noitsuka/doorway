@@ -15,7 +15,6 @@ const colunas: { titulo: string; links: LinkDoRodape[] }[] = [
     titulo: "Produto",
     links: [
       { href: "/#produto", rotulo: "Visão geral", secao: "produto" },
-      { href: "/#exemplos", rotulo: "Páginas de exemplo", secao: "exemplos" },
       { href: "/barbearia-ferraz", rotulo: "Agendar como cliente" },
       { href: "/entrar", rotulo: "Entrar" },
     ],

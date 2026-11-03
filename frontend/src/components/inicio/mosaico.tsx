@@ -223,8 +223,8 @@ export function Mosaico() {
       <Bloco className="p-5 sm:p-6">
         <Texto
           titulo="Uma página com a cara do negócio"
-          texto="Foto, cor, categoria e frase de apresentação. Os quatro exemplos acima usam os mesmos componentes, cada um com o seu tema."
-          link={["/#exemplos", "Ver os exemplos"]}
+          texto="Foto, cor, categoria e frase de apresentação, todas ajustadas pelo painel."
+          link={["/barbearia-ferraz", "Ver a página de exemplo"]}
         />
         <Moldura>
           <div className="flex items-center gap-2">

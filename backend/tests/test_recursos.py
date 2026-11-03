@@ -114,6 +114,18 @@ async def test_recriar_demo_e_idempotente_e_realista(cliente, motor):
     assert agendamentos > 50
 
 
+async def test_recriar_demo_apaga_os_exemplos_removidos(cliente, motor):
+    async with banco.SessaoEscrita() as sessao:
+        sessao.add(
+            Negocio(nome="Studio Lume", slug="studio-lume", fuso_horario="America/Sao_Paulo")
+        )
+        await sessao.commit()
+        await recriar_demo(sessao)
+        slugs = set(await sessao.scalars(select(Negocio.slug)))
+    assert "studio-lume" not in slugs
+    assert slugs == {e.slug for e in EXEMPLOS}
+
+
 async def test_recriacao_agendada_exige_o_segredo(cliente, monkeypatch):
     assert (await cliente.get("/interno/recriar-demo")).status_code == 404
     monkeypatch.setattr(obter_configuracao(), "segredo_cron", "s" * 32)

@@ -29,14 +29,14 @@ const secoes = [
     titulo: "Quem vê seus dados",
     paragrafos: [
       "Os dados de um agendamento só aparecem no painel do negócio em que ele foi feito. Nenhum negócio enxerga dados de outro, e isso é coberto por testes automatizados.",
-      "O painel da conta demo é aberto a qualquer visitante. Por isso, quem agenda nos negócios de exemplo aparece nele só com o primeiro nome, a inicial do sobrenome e o e-mail e o telefone mascarados.",
+      "O painel da conta demo é aberto a qualquer visitante. Por isso, quem agenda na barbearia de exemplo aparece nele só com o primeiro nome, a inicial do sobrenome e o e-mail e o telefone mascarados.",
       "O link de gerenciamento do seu agendamento usa um código longo e aleatório, para que ninguém consiga adivinhar o link de outra pessoa.",
     ],
   },
   {
     titulo: "Por quanto tempo",
     paragrafos: [
-      "Os negócios de exemplo e a conta de demonstração voltam ao estado original todos os dias, e os agendamentos feitos neles são apagados nesse processo.",
+      "A barbearia de exemplo e a conta de demonstração voltam ao estado original todos os dias, e os agendamentos feitos neles são apagados nesse processo.",
     ],
   },
   {

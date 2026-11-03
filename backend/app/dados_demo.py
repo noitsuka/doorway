@@ -72,53 +72,6 @@ EXEMPLOS = [
         dono="Thiago Ferraz",
     ),
     Exemplo(
-        slug="studio-lume",
-        nome="Studio Lume",
-        categoria="Estúdio de beleza",
-        chamada="Corte, coloração e cuidado para cabelos cacheados.",
-        cor_marca="#c2417a",
-        servicos=[
-            ("Corte feminino", 60, 12000),
-            ("Coloração", 120, 26000),
-            ("Hidratação", 45, 9000),
-            ("Escova", 45, 7000),
-            ("Finalização de cachos", 60, 11000),
-        ],
-        expediente=semana(range(1, 6), (time(10), time(19))),
-        parcela_mulheres=0.9,
-    ),
-    Exemplo(
-        slug="clinica-vitta",
-        nome="Clínica Vitta",
-        categoria="Fisioterapia",
-        chamada="Fisioterapia ortopédica e pilates clínico com hora marcada.",
-        cor_marca="#0e7c66",
-        servicos=[
-            ("Avaliação", 50, 15000),
-            ("Sessão de fisioterapia", 50, 13000),
-            ("Pilates clínico", 55, 11000),
-            ("Liberação miofascial", 40, 12000),
-        ],
-        expediente=semana(range(5), (time(7), time(12)), (time(14), time(20))),
-    ),
-    Exemplo(
-        slug="traco-fino",
-        nome="Traço Fino",
-        categoria="Estúdio de tatuagem",
-        chamada="Fine line, blackwork e flash day. O orçamento também se marca por aqui.",
-        cor_marca="#7c3aed",
-        servicos=[
-            ("Orçamento e desenho", 30, 0),
-            ("Flash tattoo", 60, 25000),
-            ("Fine line pequena", 90, 38000),
-            ("Sessão média", 180, 75000),
-            ("Sessão longa", 240, 120000),
-        ],
-        expediente=semana(range(1, 6), (time(12), time(20))),
-        ocupacao=0.4,
-        parcela_mulheres=0.6,
-    ),
-    Exemplo(
         slug=SLUG_LABORATORIO,
         nome="Laboratório de concorrência",
         categoria="Demonstração",
@@ -131,6 +84,7 @@ EXEMPLOS = [
 ]
 
 SLUGS_COM_PAINEL_PUBLICO = frozenset(e.slug for e in EXEMPLOS if e.dono)
+SLUGS_DE_EXEMPLOS_REMOVIDOS = ("studio-lume", "clinica-vitta", "traco-fino")
 DOMINIO_FICTICIO = "@example.com"
 
 FECHADO, LOTADO = MotivoDemanda.FECHADO, MotivoDemanda.LOTADO
@@ -330,7 +284,7 @@ async def _criar(sessao: AsyncSession, exemplo: Exemplo, hoje: date) -> None:
 
 
 async def recriar_demo(sessao: AsyncSession) -> None:
-    slugs = [e.slug for e in EXEMPLOS]
+    slugs = [e.slug for e in EXEMPLOS] + list(SLUGS_DE_EXEMPLOS_REMOVIDOS)
     ids = select(Negocio.id).where(Negocio.slug.in_(slugs)).scalar_subquery()
     for modelo in (
         Agendamento,
