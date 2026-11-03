@@ -83,7 +83,6 @@ export function Mosaico() {
         <Texto
           titulo="Horários calculados na hora"
           texto="Cada serviço tem sua duração. O cliente só vê os horários em que o atendimento cabe inteiro, respeitando pausas e o que já está marcado. Nada de tabela de horários para manter."
-          link={["/como-foi-feito", "Ver como foi feito"]}
         />
         <div aria-hidden className="rounded-[8px] border border-line bg-canvas p-3 sm:p-4">
           <div className="flex flex-wrap gap-1.5 text-xs">
@@ -145,7 +144,6 @@ export function Mosaico() {
           <Texto
             titulo="A demanda que você não vê"
             texto="Cada dia sem horário livre e cada busca sem resultado na sua página viram um mapa de calor. O painel separa o que caiu fora do expediente do que esbarrou na agenda cheia e diz qual horário vale abrir."
-            link={["/como-foi-feito", "Como é medido"]}
           />
         </div>
       </Bloco>

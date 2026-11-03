@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { BotaoDemo } from "@/components/botao-demo";
@@ -143,21 +142,13 @@ export default function Inicio() {
                 Veja o sistema funcionando.
               </h2>
               <p className="mt-4 max-w-lg text-[17px] leading-relaxed text-muted">
-                O painel demo abre em um clique, sem cadastro. A arquitetura, as decisões e os
-                testes estão em Como foi feito.
+                O painel demo abre em um clique, sem cadastro.
               </p>
             </div>
             <div className="flex flex-col gap-2.5 sm:flex-row">
               <BotaoDemo variante="primario" tamanho="grande">
                 Abrir painel demo
               </BotaoDemo>
-              <Link
-                href="/como-foi-feito"
-                className="group inline-flex h-11 items-center justify-center gap-1.5 px-2 text-[15px] text-link"
-              >
-                Como foi feito
-                <ArrowRight className="size-4 transition-transform duration-200 ease-(--ease-out) group-hover:translate-x-0.5" />
-              </Link>
             </div>
           </Surgir>
         </section>
