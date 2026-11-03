@@ -49,10 +49,11 @@ Cada negócio tem uma página pública onde o cliente escolhe serviço, data e h
 - Próximos horários sugeridos quando o escolhido acaba de ser reservado por outra pessoa
 - Contato por WhatsApp ou telefone, com e-mail opcional
 - Remarcação e cancelamento por um link próprio, sem criar conta
-- Evento no Google Agenda ou no Outlook e arquivo `.ics`
+- Evento no Google Agenda ou no Outlook em um clique
 
 **Para o dono do negócio**
 
+- Primeiros passos na agenda de uma conta nova: cadastrar serviços e definir horários
 - Agenda numa faixa de dias que se arrasta ou num calendário, com a quantidade de clientes por dia e a receita prevista da semana, atualizada automaticamente
 - Serviços com duração e preço, com prévia de como aparecem na página
 - Horários com modelos prontos, pausa para o almoço e opção de aplicar a todos os dias
@@ -72,7 +73,7 @@ Cada negócio tem uma página pública onde o cliente escolhe serviço, data e h
 | Camada | Tecnologias |
 | --- | --- |
 | Backend | Python 3.14, FastAPI, SQLAlchemy 2 (async), asyncpg, Pydantic 2, Alembic |
-| Banco | PostgreSQL 17 (restrição de exclusão com `btree_gist`) |
+| Banco | PostgreSQL 17 no Docker e na CI, 18 no Neon (restrição de exclusão com `btree_gist`) |
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Motion, GSAP |
 | Qualidade | pytest, Hypothesis, Ruff, ESLint, Prettier, GitHub Actions |
 | Infra | Docker, Gunicorn + Uvicorn, Vercel, Neon |
@@ -125,7 +126,7 @@ Sem a trava, os testes de concorrência mostraram deadlock entre inserções sob
 
 **Limite de tentativas no PostgreSQL** ([ADR 0003](docs/adr/0003-limites-no-postgres.md)). Contadores por janela fixa com `INSERT ... ON CONFLICT`, compartilhados entre workers e instâncias serverless, sem depender de Redis.
 
-**Calendário sem OAuth** ([ADR 0004](docs/adr/0004-calendario-sem-oauth.md)). Link de template e `.ics` para o cliente, e feed de assinatura com token secreto para o dono. Nenhum app precisa de aprovação do Google.
+**Calendário sem OAuth** ([ADR 0004](docs/adr/0004-calendario-sem-oauth.md)). Links de template do Google Agenda e do Outlook para o cliente, e feed de assinatura com token secreto para o dono. Nenhum app precisa de aprovação do Google.
 
 **Foto do negócio no banco** ([ADR 0005](docs/adr/0005-foto-no-banco.md)). A imagem é recortada e reduzida para 256 px no navegador, validada pelos bytes no servidor e servida com cache permanente por URL versionada.
 
@@ -164,7 +165,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-228 testes: unidade, API, propriedades, fuzzing e um teste de caos com 60 clientes simultâneos que, ao final, confere no banco que nenhuma regra foi violada. Em SQLite, os 11 testes que dependem do PostgreSQL são pulados. Com `DATABASE_URL` apontando para PostgreSQL rodam todos, como na CI, que também executa `alembic check`. No frontend, a CI confere tipos, ESLint, Prettier e o build.
+230 testes: unidade, API, propriedades, fuzzing e um teste de caos com 60 clientes simultâneos que, ao final, confere no banco que nenhuma regra foi violada. Em SQLite, os 11 testes que dependem do PostgreSQL são pulados. Com `DATABASE_URL` apontando para PostgreSQL rodam todos, como na CI, que também executa `alembic check`. No frontend, a CI confere tipos, ESLint, Prettier e o build.
 
 O desempenho pode ser medido com `backend/scripts/teste_carga.py`. Numa máquina local, com 4 workers e 50 conexões, a consulta de horários sustentou cerca de 1.600 req/s com p99 de 42 ms. A demonstração roda em funções serverless, então a latência lá é dominada pela rede.
 

@@ -8,7 +8,7 @@ Sincronizar com o Google Agenda nos dois sentidos exige um app no Google Cloud c
 
 ## Decisão
 
-- Cliente: depois de reservar, recebe um link de template do Google Agenda (`calendar/render?action=TEMPLATE`) e um arquivo `.ics` para Apple e Outlook.
+- Cliente: depois de reservar, recebe links de template do Google Agenda (`calendar/render?action=TEMPLATE`) e do Outlook. Não há arquivo para baixar.
 - Dono do negócio: recebe uma URL de assinatura `/agenda/{token}.ics`, que pode ser adicionada no Google Agenda, no iPhone ou no Outlook. O token é aleatório, pode ser trocado no painel e invalida o anterior.
 
 ## Consequências
