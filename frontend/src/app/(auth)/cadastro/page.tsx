@@ -32,10 +32,14 @@ export default function PaginaDeCadastro() {
 
   async function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    const dados = new FormData(evento.currentTarget);
+    const formulario = evento.currentTarget;
+    const dados = new FormData(formulario);
+    const email = String(dados.get("email") ?? "");
     const local = {
+      nome_negocio: nomeNegocio.trim() ? undefined : "Informe o nome do negócio.",
+      slug: slug.length < 3 ? "Use pelo menos 3 letras ou números." : undefined,
       nome: erroNome(String(dados.get("nome") ?? "")),
-      email: erroEmail(String(dados.get("email") ?? "")),
+      email: email.trim() ? erroEmail(email) : "Informe seu e-mail.",
       senha:
         String(dados.get("senha") ?? "").length < 8 ? "Use pelo menos 8 caracteres." : undefined,
     };
@@ -43,8 +47,10 @@ export default function PaginaDeCadastro() {
       string,
       string
     >;
-    if (Object.keys(invalidos).length) {
+    const primeiro = Object.keys(invalidos)[0];
+    if (primeiro) {
       setCampos(invalidos);
+      formulario.querySelector<HTMLInputElement>(`[data-campo="${primeiro}"]`)?.focus();
       return;
     }
     setCarregando(true);
@@ -90,6 +96,7 @@ export default function PaginaDeCadastro() {
           }}
           placeholder="Barbearia do Zé"
           autoComplete="organization"
+          data-campo="nome_negocio"
           required
           erro={campos.nome_negocio}
         />
@@ -115,6 +122,7 @@ export default function PaginaDeCadastro() {
               }}
               aria-invalid={erroSlug ? true : undefined}
               aria-describedby={`${idSlug}-nota`}
+              data-campo="slug"
               autoCapitalize="none"
               spellCheck={false}
               required
@@ -129,13 +137,21 @@ export default function PaginaDeCadastro() {
           </p>
         </div>
 
-        <Campo rotulo="Seu nome" name="nome" autoComplete="name" required erro={campos.nome} />
+        <Campo
+          rotulo="Seu nome"
+          name="nome"
+          autoComplete="name"
+          data-campo="nome"
+          required
+          erro={campos.nome}
+        />
         <Campo
           rotulo="E-mail"
           name="email"
           type="email"
           inputMode="email"
           autoComplete="email"
+          data-campo="email"
           required
           erro={campos.email}
         />
@@ -144,6 +160,7 @@ export default function PaginaDeCadastro() {
           name="senha"
           type="password"
           autoComplete="new-password"
+          data-campo="senha"
           minLength={8}
           dica="Pelo menos 8 caracteres."
           required

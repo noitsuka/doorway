@@ -167,7 +167,7 @@ export function Confirmacao({
           {!emGrupo && (
             <Link
               href={`/agendamento/${primeiro.token_gestao}`}
-              className="inline-flex h-11 flex-1 items-center justify-center rounded-control bg-accent px-4 font-semibold text-accent-fg transition-[filter] hover:brightness-110"
+              className="inline-flex h-11 items-center justify-center rounded-control bg-accent px-4 font-semibold text-accent-fg transition-[filter] hover:brightness-110 sm:flex-1"
             >
               Gerenciar agendamento
             </Link>
