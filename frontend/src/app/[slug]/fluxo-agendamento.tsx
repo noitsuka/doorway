@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { use, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 
@@ -33,9 +33,18 @@ type Pessoa = { nome: string; servico: Servico };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export function FluxoAgendamento({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
-  return SLUG.test(slug) ? <Fluxo slug={slug} /> : <NaoEncontrado />;
+export function FluxoAgendamento({
+  slug,
+  negocioInicial,
+}: {
+  slug: string;
+  negocioInicial?: NegocioPublico;
+}) {
+  return SLUG.test(slug) ? (
+    <Fluxo slug={slug} negocioInicial={negocioInicial} />
+  ) : (
+    <NaoEncontrado />
+  );
 }
 
 type Carregado = {
@@ -44,39 +53,42 @@ type Carregado = {
   chave: string;
 };
 
-function Fluxo({ slug }: { slug: string }) {
+function montar(dados: NegocioPublico, parametros: ReturnType<typeof useSearchParams>): Carregado {
+  const hoje = hojeEm(dados.fuso_horario);
+  const pedido = dados.servicos.find((s) => String(s.id) === parametros.get("servico"));
+  const diaPedido = parametros.get("dia");
+  return {
+    negocio: dados,
+    inicial: {
+      servico: pedido ?? (dados.servicos.length === 1 ? dados.servicos[0] : undefined),
+      dia: diaPedido && diaPedido >= hoje ? diaPedido : hoje,
+      horario: (pedido && parametros.get("horario")) || undefined,
+    },
+    chave: parametros.toString(),
+  };
+}
+
+function Fluxo({ slug, negocioInicial }: { slug: string; negocioInicial?: NegocioPublico }) {
   const parametros = useSearchParams();
-  const [carregado, setCarregado] = useState<Carregado | null>();
+  const [carregado, setCarregado] = useState<Carregado | null | undefined>(
+    () => negocioInicial && montar(negocioInicial, parametros),
+  );
   const [indisponivel, setIndisponivel] = useState(false);
   const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
     let ativo = true;
     api<NegocioPublico>(`/publico/${slug}`)
-      .then((dados) => {
-        if (!ativo) return;
-        const hoje = hojeEm(dados.fuso_horario);
-        const pedido = dados.servicos.find((s) => String(s.id) === parametros.get("servico"));
-        const diaPedido = parametros.get("dia");
-        setCarregado({
-          negocio: dados,
-          inicial: {
-            servico: pedido ?? (dados.servicos.length === 1 ? dados.servicos[0] : undefined),
-            dia: diaPedido && diaPedido >= hoje ? diaPedido : hoje,
-            horario: (pedido && parametros.get("horario")) || undefined,
-          },
-          chave: parametros.toString(),
-        });
-      })
+      .then((dados) => ativo && setCarregado(montar(dados, parametros)))
       .catch((e) => {
         if (!ativo) return;
         if (e instanceof ErroApi && (e.status === 404 || e.status === 422)) setCarregado(null);
-        else setIndisponivel(true);
+        else if (!negocioInicial) setIndisponivel(true);
       });
     return () => {
       ativo = false;
     };
-  }, [slug, parametros, tentativa]);
+  }, [slug, parametros, tentativa, negocioInicial]);
 
   if (indisponivel) {
     return (
@@ -169,7 +181,7 @@ function Reserva({
       {etapa !== "concluida" && <IndicadorEtapas atual={indiceEtapa} />}
 
       <main className="mx-auto grid max-w-6xl gap-6 px-5 sm:px-8 lg:grid-cols-[1fr_22rem] lg:gap-10">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {etapa === "concluida" && agendamentos ? (
             <motion.div
               key="concluida"

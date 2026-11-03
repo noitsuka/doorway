@@ -27,7 +27,13 @@ export default function PaginaDeAgendamento({ params }: PageProps<"/[slug]">) {
         </div>
       }
     >
-      <FluxoAgendamento params={params} />
+      <ConteudoDaPagina params={params} />
     </Suspense>
   );
+}
+
+async function ConteudoDaPagina({ params }: { params: PageProps<"/[slug]">["params"] }) {
+  const { slug } = await params;
+  const negocio = await carregarNegocio(slug);
+  return <FluxoAgendamento slug={slug} negocioInicial={negocio ?? undefined} />;
 }
