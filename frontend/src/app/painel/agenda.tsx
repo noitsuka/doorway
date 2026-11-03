@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Ban, CalendarX2, Link2, Mail, MessageCircle } from "lucide-react";
+import { ArrowRight, Ban, CalendarX2, Check, Link2, Mail, MessageCircle } from "lucide-react";
 
 import { Gaveta } from "@/components/gaveta";
 import { NumeroAnimado } from "@/components/numero-animado";
 import { notificar } from "@/components/notificacao";
 import { SeletorDeDias } from "@/components/seletor-de-dias";
-import { Botao, Esqueleto } from "@/components/ui";
+import { Botao, Esqueleto, LinkBotao } from "@/components/ui";
 import { api, textoDoErro } from "@/lib/api";
 import {
   dataLonga,
@@ -22,7 +23,7 @@ import {
   segundaDe,
   somarDias,
 } from "@/lib/formatacao";
-import type { Agendamento, AgendaDoDia, Horario } from "@/lib/tipos";
+import type { Agendamento, AgendaDoDia, Horario, Servico } from "@/lib/tipos";
 import { exibirTelefone } from "@/lib/validacao";
 import { useSessao } from "./sessao";
 
@@ -94,6 +95,7 @@ export function PaginaDaAgenda() {
   const [semana, setSemana] = useSemana(segunda, fuso);
   const [porDia, setPorDia] = useState<Record<string, number>>();
   const [horarios, setHorarios] = useState<Horario[]>([]);
+  const [temServico, setTemServico] = useState<boolean>();
   const [aberto, setAberto] = useState<Agendamento>();
 
   const primeiroDia = somarDias(hoje, -DIAS_ANTES);
@@ -120,6 +122,9 @@ export function PaginaDaAgenda() {
     api<Horario[]>("/horarios")
       .then(setHorarios)
       .catch(() => setHorarios([]));
+    api<Servico[]>("/servicos")
+      .then((servicos) => setTemServico(servicos.some((s) => s.ativo)))
+      .catch(() => {});
   }, []);
 
   const cancelar = useCallback(
@@ -174,6 +179,10 @@ export function PaginaDaAgenda() {
           </h1>
         </div>
       </div>
+
+      {temServico !== undefined && (!temServico || horarios.length === 0) && (
+        <PrimeirosPassos temServico={temServico} temHorario={horarios.length > 0} />
+      )}
 
       <div className="mt-8 grid grid-cols-2 overflow-hidden rounded-panel border border-line bg-raised sm:grid-cols-3">
         <Indicador rotulo="Hoje" valor={porDia?.[hoje]} />
@@ -249,6 +258,68 @@ export function PaginaDaAgenda() {
         )}
       </Gaveta>
     </>
+  );
+}
+
+function PrimeirosPassos({ temServico, temHorario }: { temServico: boolean; temHorario: boolean }) {
+  const passos = [
+    {
+      feito: temServico,
+      titulo: "Cadastre seus serviços",
+      texto: "Nome, duração e preço do que você atende.",
+      href: "/painel/servicos",
+      acao: "Cadastrar",
+    },
+    {
+      feito: temHorario,
+      titulo: "Defina seus horários",
+      texto: "Os clientes só veem horários dentro do seu expediente.",
+      href: "/painel/horarios",
+      acao: "Definir",
+    },
+  ];
+  const feitos = passos.filter((p) => p.feito).length;
+
+  return (
+    <section
+      aria-labelledby="primeiros-passos"
+      className="mt-8 rounded-panel border border-line bg-raised p-5 sm:p-6"
+    >
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 id="primeiros-passos" className="font-semibold">
+          Falta pouco para receber agendamentos
+        </h2>
+        <p className="shrink-0 font-mono text-xs text-muted tabular">
+          {feitos} de {passos.length}
+        </p>
+      </div>
+      <ol className="mt-4 divide-y divide-line">
+        {passos.map((passo, i) => (
+          <li key={passo.href} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
+            <span
+              className={`grid size-7 shrink-0 place-items-center rounded-full font-mono text-xs ${
+                passo.feito ? "bg-accent text-accent-fg" : "border border-line-strong text-muted"
+              }`}
+            >
+              {passo.feito ? <Check className="size-3.5" aria-label="Feito" /> : i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className={`text-sm font-medium ${passo.feito ? "text-muted line-through" : ""}`}>
+                {passo.titulo}
+              </p>
+              {!passo.feito && (
+                <p className="mt-0.5 hidden text-sm text-muted sm:block">{passo.texto}</p>
+              )}
+            </div>
+            {!passo.feito && (
+              <LinkBotao href={passo.href} variante="contorno" tamanho="pequeno">
+                {passo.acao} <ArrowRight className="size-3.5" />
+              </LinkBotao>
+            )}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -343,84 +414,98 @@ function LinhaDoTempo({
       </div>
 
       {agendamentos.length === 0 && (
-        <div className="flex items-center gap-3 border-b border-line px-5 py-3 text-sm text-muted">
+        <div
+          className={`flex items-center gap-3 px-5 text-sm text-muted ${fechado ? "py-5" : "border-b border-line py-3"}`}
+        >
           <CalendarX2 className="size-4 shrink-0" />
-          {fechado
-            ? "Você não atende neste dia. Ajuste em Horários se quiser abrir."
-            : "Nenhum agendamento ainda. Compartilhe seu link para encher este dia."}
+          {fechado ? (
+            <p>
+              Você não atende neste dia.{" "}
+              <Link
+                href="/painel/horarios"
+                className="font-medium text-fg underline-offset-4 hover:underline"
+              >
+                Ajustar horários
+              </Link>
+            </p>
+          ) : (
+            "Nenhum agendamento ainda. Compartilhe seu link para encher este dia."
+          )}
         </div>
       )}
 
-      <div className="relative mt-5 mr-3 ml-16 sm:mr-5 sm:ml-20" style={{ height: altura }}>
-        {Array.from({ length: ultima - primeira + 1 }, (_, i) => (
-          <div
-            key={i}
-            className="absolute inset-x-0 border-t border-line"
-            style={{ top: i * 60 * PX_POR_MINUTO }}
-          >
-            <span className="absolute -top-2.5 -left-14 w-11 text-right font-mono text-xs text-faint tabular sm:-left-16">
-              {String(primeira + i).padStart(2, "0")}:00
-            </span>
-          </div>
-        ))}
-
-        {faixasFechadas(intervalos, primeira * 60, ultima * 60).map(([de, ate]) => (
-          <div
-            key={de}
-            aria-hidden
-            className="absolute inset-x-0 bg-[repeating-linear-gradient(135deg,transparent_0_7px,var(--line)_7px_8px)] opacity-70"
-            style={{ top: topo(de), height: (ate - de) * PX_POR_MINUTO }}
-          />
-        ))}
-
-        {itens.map(({ agendamento: a, inicio, fim }) => {
-          const compacto = fim - inicio < 40;
-          const minimo = fim - inicio < 25;
-          return (
-            <button
-              key={a.id}
-              onClick={() => aoAbrir(a)}
-              aria-label={`${a.nome_cliente}, ${hora(a.inicio, fuso)}, ${a.servico.nome}`}
-              className={`absolute inset-x-1 flex animate-enter overflow-hidden border border-line bg-surface px-3 text-left transition-colors duration-150 hover:border-line-strong hover:bg-fg/[0.06] ${
-                minimo ? "rounded-md text-xs leading-none" : "rounded-control text-sm"
-              }`}
-              style={{
-                top: topo(inicio) + 1,
-                height: Math.max((fim - inicio) * PX_POR_MINUTO - 2, 14),
-              }}
+      {(!fechado || agendamentos.length > 0) && (
+        <div className="relative mt-5 mr-3 ml-16 sm:mr-5 sm:ml-20" style={{ height: altura }}>
+          {Array.from({ length: ultima - primeira + 1 }, (_, i) => (
+            <div
+              key={i}
+              className="absolute inset-x-0 border-t border-line"
+              style={{ top: i * 60 * PX_POR_MINUTO }}
             >
-              <span
-                className={`flex min-w-0 flex-1 gap-x-3 ${compacto ? "items-center" : "flex-col justify-center"}`}
+              <span className="absolute -top-2.5 -left-14 w-11 text-right font-mono text-xs text-faint tabular sm:-left-16">
+                {String(primeira + i).padStart(2, "0")}:00
+              </span>
+            </div>
+          ))}
+
+          {faixasFechadas(intervalos, primeira * 60, ultima * 60).map(([de, ate]) => (
+            <div
+              key={de}
+              aria-hidden
+              className="absolute inset-x-0 bg-[repeating-linear-gradient(135deg,transparent_0_7px,var(--line)_7px_8px)] opacity-70"
+              style={{ top: topo(de), height: (ate - de) * PX_POR_MINUTO }}
+            />
+          ))}
+
+          {itens.map(({ agendamento: a, inicio, fim }) => {
+            const compacto = fim - inicio < 40;
+            const minimo = fim - inicio < 25;
+            return (
+              <button
+                key={a.id}
+                onClick={() => aoAbrir(a)}
+                aria-label={`${a.nome_cliente}, ${hora(a.inicio, fuso)}, ${a.servico.nome}`}
+                className={`absolute inset-x-1 flex animate-enter overflow-hidden border border-line bg-surface px-3 text-left transition-colors duration-150 hover:border-line-strong hover:bg-fg/[0.06] ${
+                  minimo ? "rounded-md text-xs leading-none" : "rounded-control text-sm"
+                }`}
+                style={{
+                  top: topo(inicio) + 1,
+                  height: Math.max((fim - inicio) * PX_POR_MINUTO - 2, 14),
+                }}
               >
                 <span
-                  className={`flex items-center gap-1.5 truncate font-semibold ${compacto ? "max-w-[65%] shrink-0" : ""}`}
+                  className={`flex min-w-0 flex-1 gap-x-3 ${compacto ? "items-center" : "flex-col justify-center"}`}
                 >
-                  {a.grupo && (
-                    <Link2
-                      aria-label="Reserva em grupo"
-                      className="size-3.5 shrink-0 text-accent"
-                    />
-                  )}
-                  <span className="truncate">{a.nome_cliente}</span>
+                  <span
+                    className={`flex items-center gap-1.5 truncate font-semibold ${compacto ? "max-w-[65%] shrink-0" : ""}`}
+                  >
+                    {a.grupo && (
+                      <Link2
+                        aria-label="Reserva em grupo"
+                        className="size-3.5 shrink-0 text-accent"
+                      />
+                    )}
+                    <span className="truncate">{a.nome_cliente}</span>
+                  </span>
+                  <span className="min-w-0 truncate text-muted">
+                    <span className="font-mono">{hora(a.inicio, fuso)}</span> · {a.servico.nome}
+                  </span>
                 </span>
-                <span className="min-w-0 truncate text-muted">
-                  <span className="font-mono">{hora(a.inicio, fuso)}</span> · {a.servico.nome}
-                </span>
-              </span>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
 
-        {agora !== undefined && agora >= primeira * 60 && agora <= ultima * 60 && (
-          <div
-            className="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-danger"
-            style={{ top: topo(agora) }}
-          >
-            <span className="absolute -top-[5px] -left-1.5 size-3 rounded-full bg-danger" />
-          </div>
-        )}
-      </div>
-      <div className="h-4" />
+          {agora !== undefined && agora >= primeira * 60 && agora <= ultima * 60 && (
+            <div
+              className="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-danger"
+              style={{ top: topo(agora) }}
+            >
+              <span className="absolute -top-[5px] -left-1.5 size-3 rounded-full bg-danger" />
+            </div>
+          )}
+        </div>
+      )}
+      {(!fechado || agendamentos.length > 0) && <div className="h-4" />}
     </div>
   );
 }
